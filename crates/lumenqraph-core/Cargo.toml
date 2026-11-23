@@ -13,6 +13,7 @@ db-test = []
 [dev-dependencies]
 proptest = "1"
 tokio = { version = "1", features = ["rt", "macros"] }
+insta = { version = "1", features = ["json"] }
 
 [dependencies]
 anyhow.workspace = true
