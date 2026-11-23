@@ -257,6 +257,13 @@ async fn metrics(
                 metrics.lag_ledgers
             ));
 
+            body.push_str("# HELP lumenqraph_indexer_lag_seconds Estimated time behind the chain tip at five seconds per ledger\n");
+            body.push_str("# TYPE lumenqraph_indexer_lag_seconds gauge\n");
+            body.push_str(&format!(
+                "lumenqraph_indexer_lag_seconds {}\n",
+                metrics.lag_ledgers.saturating_mul(5)
+            ));
+
             body.push_str(
                 "# HELP lumenqraph_indexer_seconds_since_update Seconds since last cursor update\n",
             );
@@ -294,18 +301,20 @@ async fn metrics(
                 metrics.errors_total
             ));
 
-            body.push_str("# HELP lumenqraph_enrichment_rate Fraction of events successfully enriched (0.0 to 1.0)\n");
-            body.push_str("# TYPE lumenqraph_enrichment_rate gauge\n");
+            body.push_str("# HELP lumenqraph_indexer_enrichment_rate Fraction of events successfully enriched (0.0 to 1.0)\n");
+            body.push_str("# TYPE lumenqraph_indexer_enrichment_rate gauge\n");
             body.push_str(&format!(
-                "lumenqraph_enrichment_rate {}\n",
+                "lumenqraph_indexer_enrichment_rate {}\n",
                 metrics.enrichment_rate
             ));
 
             // Spec cache size gauge (issue #268).
             let cache_size = state.spec_cache.cache_size();
-            body.push_str("# HELP lumenqraph_spec_cache_size Current number of entries in the in-memory spec cache\n");
-            body.push_str("# TYPE lumenqraph_spec_cache_size gauge\n");
-            body.push_str(&format!("lumenqraph_spec_cache_size {cache_size}\n"));
+            body.push_str("# HELP lumenqraph_indexer_spec_cache_size Current number of entries in the in-memory spec cache\n");
+            body.push_str("# TYPE lumenqraph_indexer_spec_cache_size gauge\n");
+            body.push_str(&format!(
+                "lumenqraph_indexer_spec_cache_size {cache_size}\n"
+            ));
 
             // RPC failover counter (#398).
             body.push_str("# HELP lumenqraph_indexer_rpc_failovers_total Total number of RPC endpoint failovers\n");
@@ -323,16 +332,16 @@ async fn metrics(
                 metrics.timestamp_parse_errors_total
             ));
 
-            body.push_str("# HELP lumenqraph_rpc_oldest_ledger Oldest ledger currently available from the RPC provider\n");
-            body.push_str("# TYPE lumenqraph_rpc_oldest_ledger gauge\n");
+            body.push_str("# HELP lumenqraph_indexer_rpc_oldest_ledger Oldest ledger currently available from the RPC provider\n");
+            body.push_str("# TYPE lumenqraph_indexer_rpc_oldest_ledger gauge\n");
             body.push_str(&format!(
-                "lumenqraph_rpc_oldest_ledger {}\n",
+                "lumenqraph_indexer_rpc_oldest_ledger {}\n",
                 crate::poller::rpc_oldest_ledger()
             ));
-            body.push_str("# HELP lumenqraph_indexer_unrecovered_missed_ranges Number of ledger ranges not yet recovered\n");
-            body.push_str("# TYPE lumenqraph_indexer_unrecovered_missed_ranges gauge\n");
+            body.push_str("# HELP lumenqraph_indexer_open_missed_ranges Number of ledger ranges not yet recovered\n");
+            body.push_str("# TYPE lumenqraph_indexer_open_missed_ranges gauge\n");
             body.push_str(&format!(
-                "lumenqraph_indexer_unrecovered_missed_ranges {}\n",
+                "lumenqraph_indexer_open_missed_ranges {}\n",
                 metrics.unrecovered_missed_ranges
             ));
             body.push_str("# HELP lumenqraph_indexer_recoverable_missed_ranges Unrecovered ranges still within RPC retention\n");
@@ -341,11 +350,55 @@ async fn metrics(
                 "lumenqraph_indexer_recoverable_missed_ranges {}\n",
                 metrics.recoverable_missed_ranges
             ));
-            body.push_str("# HELP lumenqraph_indexer_unrecoverable_missed_ranges Unrecovered ranges outside RPC retention\n");
-            body.push_str("# TYPE lumenqraph_indexer_unrecoverable_missed_ranges gauge\n");
+            body.push_str("# HELP lumenqraph_indexer_permanent_missed_ranges Unrecovered ranges outside RPC retention\n");
+            body.push_str("# TYPE lumenqraph_indexer_permanent_missed_ranges gauge\n");
             body.push_str(&format!(
-                "lumenqraph_indexer_unrecoverable_missed_ranges {}\n",
+                "lumenqraph_indexer_permanent_missed_ranges {}\n",
                 metrics.unrecoverable_missed_ranges
+            ));
+            body.push_str("# HELP lumenqraph_indexer_consecutive_errors Current number of consecutive poll-cycle failures (circuit breaker gauge; resets to 0 on success)\n");
+            body.push_str("# TYPE lumenqraph_indexer_consecutive_errors gauge\n");
+            body.push_str(&format!(
+                "lumenqraph_indexer_consecutive_errors {}\n",
+                metrics.consecutive_errors
+            ));
+            body.push_str("# HELP lumenqraph_indexer_events_enriched_total Events successfully enriched with spec data\n");
+            body.push_str("# TYPE lumenqraph_indexer_events_enriched_total counter\n");
+            body.push_str(&format!(
+                "lumenqraph_indexer_events_enriched_total {}\n",
+                metrics.enriched
+            ));
+            body.push_str("# HELP lumenqraph_indexer_events_not_enriched_total Events without matching spec (fallback to decoded)\n");
+            body.push_str("# TYPE lumenqraph_indexer_events_not_enriched_total counter\n");
+            body.push_str(&format!(
+                "lumenqraph_indexer_events_not_enriched_total {}\n",
+                metrics.not_enriched
+            ));
+            body.push_str("# HELP lumenqraph_indexer_spec_fetch_failures_total Failed attempts to fetch contract specs\n");
+            body.push_str("# TYPE lumenqraph_indexer_spec_fetch_failures_total counter\n");
+            body.push_str(&format!(
+                "lumenqraph_indexer_spec_fetch_failures_total {}\n",
+                metrics.spec_fetch_failures
+            ));
+            body.push_str(
+                "# HELP lumenqraph_indexer_rpc_calls_total Total RPC method calls made\n",
+            );
+            body.push_str("# TYPE lumenqraph_indexer_rpc_calls_total counter\n");
+            body.push_str(&format!(
+                "lumenqraph_indexer_rpc_calls_total {}\n",
+                metrics.rpc_calls
+            ));
+            body.push_str("# HELP lumenqraph_indexer_rpc_errors_total RPC errors encountered\n");
+            body.push_str("# TYPE lumenqraph_indexer_rpc_errors_total counter\n");
+            body.push_str(&format!(
+                "lumenqraph_indexer_rpc_errors_total {}\n",
+                metrics.rpc_errors
+            ));
+            body.push_str("# HELP lumenqraph_indexer_rpc_errors_32001_total RPC -32001 processing-limit errors\n");
+            body.push_str("# TYPE lumenqraph_indexer_rpc_errors_32001_total counter\n");
+            body.push_str(&format!(
+                "lumenqraph_indexer_rpc_errors_32001_total {}\n",
+                metrics.rpc_errors_32001
             ));
             render_process_counters(&mut body);
         }
@@ -368,17 +421,19 @@ async fn metrics(
 fn render_process_counters(body: &mut String) {
     crate::timing::render(body);
     // Transfer-like events skipped by the SEP-41 projection (#600).
-    body.push_str("# HELP lumenqraph_transfer_projection_skipped_total Transfer-like events skipped by the SEP-41 projection since start\n");
-    body.push_str("# TYPE lumenqraph_transfer_projection_skipped_total counter\n");
+    body.push_str("# HELP lumenqraph_indexer_transfer_projection_skipped_total Transfer-like events skipped by the SEP-41 projection since start\n");
+    body.push_str("# TYPE lumenqraph_indexer_transfer_projection_skipped_total counter\n");
     body.push_str(&format!(
-        "lumenqraph_transfer_projection_skipped_total {}\n",
+        "lumenqraph_indexer_transfer_projection_skipped_total {}\n",
         crate::store::transfer_projection_skipped_total()
     ));
     // webhook_deliveries rows dropped by retention (#601).
-    body.push_str("# HELP lumenqraph_webhook_deliveries_dropped_by_retention_total webhook_deliveries rows dropped by retention since start\n");
-    body.push_str("# TYPE lumenqraph_webhook_deliveries_dropped_by_retention_total counter\n");
+    body.push_str("# HELP lumenqraph_indexer_webhook_deliveries_dropped_by_retention_total webhook_deliveries rows dropped by retention since start\n");
+    body.push_str(
+        "# TYPE lumenqraph_indexer_webhook_deliveries_dropped_by_retention_total counter\n",
+    );
     body.push_str(&format!(
-        "lumenqraph_webhook_deliveries_dropped_by_retention_total {}\n",
+        "lumenqraph_indexer_webhook_deliveries_dropped_by_retention_total {}\n",
         crate::retention::webhook_deliveries_dropped_by_retention_total()
     ));
 }
@@ -542,6 +597,14 @@ struct IndexerMetrics {
     events_ingested_total: i64,
     errors_total: i64,
     enrichment_rate: f64,
+    consecutive_errors: i64,
+    enriched: i64,
+    not_enriched: i64,
+    spec_fetch_failures: i64,
+    rpc_calls: i64,
+    rpc_errors: i64,
+    rpc_errors_32001: i64,
+
     /// Cumulative RPC endpoint failovers (#398).
     rpc_failovers_total: i64,
     /// Cumulative timestamp parse errors (#399).
@@ -555,6 +618,11 @@ struct IndexerMetrics {
 async fn gather_metrics(pool: &PgPool) -> anyhow::Result<IndexerMetrics> {
     // Column order matches the SELECT below.
     type CursorRow = (
+        i64,
+        i64,
+        i64,
+        i64,
+        i64,
         i64,
         i64,
         i64,
@@ -586,6 +654,11 @@ async fn gather_metrics(pool: &PgPool) -> anyhow::Result<IndexerMetrics> {
         not_enriched,
         rpc_failovers,
         ts_errors,
+        consecutive_errors,
+        spec_fetch_failures,
+        rpc_calls,
+        rpc_errors,
+        rpc_errors_32001,
         updated_at,
         progress_at,
     )) = status
@@ -624,6 +697,14 @@ async fn gather_metrics(pool: &PgPool) -> anyhow::Result<IndexerMetrics> {
         events_ingested_total: events,
         errors_total: errors,
         enrichment_rate,
+        consecutive_errors,
+        enriched,
+        not_enriched,
+        spec_fetch_failures,
+        rpc_calls,
+        rpc_errors,
+        rpc_errors_32001,
+
         rpc_failovers_total: rpc_failovers,
         timestamp_parse_errors_total: ts_errors,
         unrecovered_missed_ranges,
@@ -1247,20 +1328,20 @@ mod tests {
 
         // Both process-wide counters must be exported with HELP/TYPE lines.
         assert!(
-            body.contains("lumenqraph_transfer_projection_skipped_total"),
+            body.contains("lumenqraph_indexer_transfer_projection_skipped_total"),
             "missing transfer_projection_skipped_total in metrics body:\n{body}"
         );
         assert!(
-            body.contains("# TYPE lumenqraph_transfer_projection_skipped_total counter"),
+            body.contains("# TYPE lumenqraph_indexer_transfer_projection_skipped_total counter"),
             "missing TYPE line for transfer_projection_skipped_total:\n{body}"
         );
         assert!(
-            body.contains("lumenqraph_webhook_deliveries_dropped_by_retention_total"),
+            body.contains("lumenqraph_indexer_webhook_deliveries_dropped_by_retention_total"),
             "missing webhook_deliveries_dropped_by_retention_total in metrics body:\n{body}"
         );
         assert!(
             body.contains(
-                "# TYPE lumenqraph_webhook_deliveries_dropped_by_retention_total counter"
+                "# TYPE lumenqraph_indexer_webhook_deliveries_dropped_by_retention_total counter"
             ),
             "missing TYPE line for webhook_deliveries_dropped_by_retention_total:\n{body}"
         );
