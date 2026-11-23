@@ -494,6 +494,7 @@ mod network_pin_tests {
                 last_processed_ledger BIGINT      NOT NULL,
                 network_passphrase    TEXT,
                 updated_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
+                progress_at           TIMESTAMPTZ,
                 CONSTRAINT single_row CHECK (id = 1)
             )",
         )
