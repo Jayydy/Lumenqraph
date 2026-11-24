@@ -1161,6 +1161,175 @@
       ],
       "title": "Webhook Delivery Latency & Retention Drops",
       "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 97 },
+      "id": 119,
+      "panels": [],
+      "title": "Database Connection Pool",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "Postgres pool connections by state (idle, in_use, max) across services.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 98 },
+      "id": 120,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "right" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "expr": "lumenqraph_db_pool_connections{job=~\"$job\",instance=~\"$instance\"}",
+          "legendFormat": "{{job}} ({{state}})",
+          "refId": "A"
+        }
+      ],
+      "title": "DB Pool Connections by State",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "Fraction of max pool connections currently in use. Alerts at > 0.9 for 5 minutes (LumenqraphDBPoolSaturated).",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": true,
+            "thresholdsStyle": { "mode": "line" }
+          },
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.75 },
+              { "color": "red", "value": 0.9 }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 98 },
+      "id": 121,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "right" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "expr": "lumenqraph_db_pool_connections{state=\"in_use\",job=~\"$job\",instance=~\"$instance\"} / ignoring(state) lumenqraph_db_pool_connections{state=\"max\",job=~\"$job\",instance=~\"$instance\"}",
+          "legendFormat": "{{job}} saturation",
+          "refId": "A"
+        }
+      ],
+      "title": "DB Pool Saturation (in_use / max)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "Postgres pool connection acquire latency percentiles.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 106 },
+      "id": 122,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (job, le) (rate(lumenqraph_db_pool_acquire_duration_seconds_bucket{job=~\"$job\",instance=~\"$instance\"}[5m])))",
+          "legendFormat": "{{job}} p50",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (job, le) (rate(lumenqraph_db_pool_acquire_duration_seconds_bucket{job=~\"$job\",instance=~\"$instance\"}[5m])))",
+          "legendFormat": "{{job}} p95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (job, le) (rate(lumenqraph_db_pool_acquire_duration_seconds_bucket{job=~\"$job\",instance=~\"$instance\"}[5m])))",
+          "legendFormat": "{{job}} p99",
+          "refId": "C"
+        }
+      ],
+      "title": "DB Pool Acquire Latency (p50 / p95 / p99)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "Connection pool acquire timeouts over 5-minute windows.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": true,
+            "thresholdsStyle": { "mode": "line" }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 106 },
+      "id": 123,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "right" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "expr": "increase(lumenqraph_db_pool_acquire_timeouts_total{job=~\"$job\",instance=~\"$instance\"}[5m])",
+          "legendFormat": "{{job}} timeouts (5m)",
+          "refId": "A"
+        }
+      ],
+      "title": "DB Pool Acquire Timeouts",
+      "type": "timeseries"
     }
   ],
   "refresh": "30s",
