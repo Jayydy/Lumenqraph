@@ -1346,5 +1346,13 @@ mod tests {
             ),
             "missing TYPE line for webhook_deliveries_dropped_by_retention_total:\n{body}"
         );
+        assert!(
+            body.contains("lumenqraph_indexer_heartbeat_timestamp_seconds"),
+            "missing heartbeat_timestamp_seconds in metrics body:\n{body}"
+        );
+        assert!(
+            body.contains("# TYPE lumenqraph_indexer_heartbeat_timestamp_seconds gauge"),
+            "missing TYPE line for heartbeat_timestamp_seconds:\n{body}"
+        );
     }
 }
