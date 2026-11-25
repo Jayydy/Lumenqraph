@@ -128,6 +128,9 @@ Exposed by the `lumenqraph-webhooks` service on its own `/metrics` endpoint
 | `lumenqraph_api_sse_broadcast_lagged_total` | counter | count | API |
 | `lumenqraph_api_sse_broadcast_receivers` | gauge | count | API |
 | `lumenqraph_api_sse_listener_up` | gauge | boolean (0 or 1) | API |
+| `lumenqraph_db_pool_acquire_duration_seconds` | histogram | seconds | All |
+| `lumenqraph_db_pool_acquire_timeouts_total` | counter | count | All |
+| `lumenqraph_db_pool_connections` | gauge | count | All |
 | `lumenqraph_indexer_chain_tip_ledger` | gauge | ledgers | Indexer |
 | `lumenqraph_indexer_consecutive_errors` | gauge | count | Indexer |
 | `lumenqraph_indexer_enrichment_rate` | gauge | fraction (0–1) | Indexer |

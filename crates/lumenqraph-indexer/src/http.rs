@@ -407,6 +407,10 @@ async fn metrics(
         }
     }
 
+    // Exports lumenqraph_db_pool_connections, lumenqraph_db_pool_acquire_timeouts_total,
+    // and lumenqraph_db_pool_acquire_duration_seconds.
+    lumenqraph_core::db::render_pool_metrics(&mut body, &state.pool);
+
     (
         axum::http::StatusCode::OK,
         [(header::CONTENT_TYPE, "text/plain; version=0.0.4")],
