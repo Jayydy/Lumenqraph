@@ -224,12 +224,3 @@ groups:
         annotations:
           summary: "Indexer poll-loop heartbeat has not updated for more than 4 minutes."
           runbook_url: "https://github.com/Lumen-Scribe/Lumenqraph/blob/main/monitoring/README.md#lumenqraphindexerheartbeatstale"
-
-      - alert: LumenqraphDBPoolSaturated
-        expr: 'lumenqraph_db_pool_connections{state="in_use"} / ignoring(state) lumenqraph_db_pool_connections{state="max"} > 0.9'
-        for: 5m
-        labels:
-          severity: critical
-        annotations:
-          summary: "Database connection pool utilization exceeds 90% for five minutes."
-          runbook_url: "https://github.com/Lumen-Scribe/Lumenqraph/blob/main/monitoring/README.md#lumenqraphdbpoolsaturated"
